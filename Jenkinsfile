@@ -1,40 +1,72 @@
 pipeline {
     agent any
+    
     environment {
-        DOCUMENT_ROOT = "/var/www/html/jenkins-site"
+        DEPLOY_PATH = '/var/www/html'  // Apache default path
+        BRANCH_NAME = "${env.BRANCH_NAME}"
     }
-    triggers {
-        githubPush() // Triggered by GitHub webhook
-    }
+    
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
                 checkout scm
             }
         }
+        
         stage('Deploy to Apache') {
             steps {
                 script {
-                    def htmlFile = findFiles(glob: '*.html')[0]
-                    if (htmlFile) {
-                        sh """
-                        sudo cp ${htmlFile.path} ${env.DOCUMENT_ROOT}/index.html
-                        sudo chown www-data:www-data ${env.DOCUMENT_ROOT}/index.html
-                        """
-                        echo "HTML file deployed successfully!"
-                    } else {
-                        error "No HTML file found in the repository!"
-                    }
+                    def deployPath = "${DEPLOY_PATH}/${BRANCH_NAME}"
+                    
+                    // Create branch-specific directory if it doesn't exist
+                    sshPublisher(
+                        publishers: [
+                            sshPublisherDesc(
+                                configName: 'AWS_Apache',
+                                transfers: [
+                                    sshTransfer(
+                                        execCommand: """
+                                            mkdir -p ${deployPath}
+                                            chmod 755 ${deployPath}
+                                        """
+                                    )
+                                ]
+                            )
+                        ]
+                    )
+                    
+                    // Deploy HTML file
+                    sshPublisher(
+                        publishers: [
+                            sshPublisherDesc(
+                                configName: 'AWS_Apache',
+                                transfers: [
+                                    sshTransfer(
+                                        sourceFiles: '*.html',
+                                        removePrefix: '',
+                                        remoteDirectory: "${BRANCH_NAME}",
+                                        execCommand: """
+                                            chmod 644 ${deployPath}/*.html
+                                            echo "Deployed to ${deployPath}"
+                                        """
+                                    )
+                                ]
+                            )
+                        ]
+                    )
                 }
             }
         }
     }
+    
     post {
         success {
-            echo 'Deployment succeeded!'
+            echo "Deployment successful! Access the site at:"
+            echo "Main branch: http://54.161.136.69/main/"
+            echo "Development branch: http://54.161.136.69/development/"
         }
         failure {
-            echo 'Deployment failed!'
+            echo "Deployment failed!"
         }
     }
 }
