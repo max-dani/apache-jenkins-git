@@ -1,33 +1,40 @@
 pipeline {
     agent any
+    environment {
+        DOCUMENT_ROOT = "/var/www/html/jenkins-site"
+    }
+    triggers {
+        githubPush() // Triggered by GitHub webhook
+    }
     stages {
-        stage('Checkout Code') {
+        stage('Clone Repository') {
             steps {
-                // Clone the code from the current branch
                 checkout scm
             }
         }
         stage('Deploy to Apache') {
             steps {
                 script {
-                    // Determine the target directory based on the branch name
-                    def targetDir = ''
-                    if (env.BRANCH_NAME == 'main') {
-                        targetDir = '/var/www/html/main'
-                    } else if (env.BRANCH_NAME == 'development') {
-                        targetDir = '/var/www/html/dev'
+                    def htmlFile = findFiles(glob: '*.html')[0]
+                    if (htmlFile) {
+                        sh """
+                        sudo cp ${htmlFile.path} ${env.DOCUMENT_ROOT}/index.html
+                        sudo chown www-data:www-data ${env.DOCUMENT_ROOT}/index.html
+                        """
+                        echo "HTML file deployed successfully!"
                     } else {
-                        error("Branch '${env.BRANCH_NAME}' is not configured for deployment.")
+                        error "No HTML file found in the repository!"
                     }
-
-                    // Create the target directory if it doesn't exist
-                    sh """
-                    sudo mkdir -p ${targetDir}
-                    sudo cp university.html ${targetDir}/
-                    sudo systemctl reload apache2
-                    """
                 }
             }
+        }
+    }
+    post {
+        success {
+            echo 'Deployment succeeded!'
+        }
+        failure {
+            echo 'Deployment failed!'
         }
     }
 }
