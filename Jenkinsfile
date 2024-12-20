@@ -62,8 +62,8 @@ pipeline {
     post {
         success {
             echo "Deployment successful! Access the site at:"
-            echo "Main branch: http://54.161.136.69/main/"
-            echo "Development branch: http://54.161.136.69/development/"
+            echo "Main branch: http://54.173.50.161/main/"
+            echo "Development branch: http://54.173.50.161/development/"
         }
         failure {
             echo "Deployment failed!"
