@@ -14,7 +14,7 @@ pipeline {
                 sshPublisher(
                     publishers: [
                         sshPublisherDesc(
-                            configName: 'apache-server',
+                            configName: 'AWS_Apache',
                             transfers: [
                                 sshTransfer(
                                     sourceFiles: '**/*',
