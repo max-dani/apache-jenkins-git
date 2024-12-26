@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DEPLOY_PATH = '/var/www/html'
-        BRANCH_NAME = "${env.BRANCH_NAME}" // Use branch-specific subdirectories
+        BRANCH_NAME = 'tourism_site' // Use branch-specific subdirectories
     }
 
     stages {
