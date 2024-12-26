@@ -16,7 +16,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    sh "${NODE_HOME}/npm install"
+                    sh "${NODE_HOME}/bin/npm install"
                 }
             }
         }
@@ -24,7 +24,7 @@ pipeline {
         stage('Build App') {
             steps {
                 script {
-                    sh "${NODE_HOME}/npm run build"
+                    sh "${NODE_HOME}/bin/npm run build"
                 }
             }
         }
