@@ -13,48 +13,45 @@ pipeline {
             }
         }
 
-        stage('Deploy to Apache') {
-            steps {
-                script {
-                    def deployPath = "${DEPLOY_PATH}/${BRANCH_NAME}"
-
-                    // Ensure the branch-specific directory exists
-                    sshPublisher(
-                        publishers: [
-                            sshPublisherDesc(
-                                configName: 'AWS_Apache',
-                                transfers: [
-                                    sshTransfer(
-                                        execCommand: """
-                                            mkdir -p ${deployPath}
-                                            chmod 755 ${deployPath}
-                                        """
-                                    )
-                                ]
-                            )
-                        ]
-                    )
-
-                    // Transfer the files to the Apache server
-                    sshPublisher(
-                        publishers: [
-                            sshPublisherDesc(
-                                configName: 'AWS_Apache',
-                                transfers: [
-                                    sshTransfer(
-                                        sourceFiles: '**/*',
-                                        removePrefix: '',
-                                        remoteDirectory: "${deployPath}",
-                                        execCommand: """
-                                            chmod -R 644 ${deployPath}
-                                            echo "Deployment successful to ${deployPath}"
-                                        """
-                                    )
-                                ]
-                            )
-                        ]
-                    )
-                }
+   stage('Deploy to Apache') {
+         steps {
+            script {
+                def deployPath = "/var/www/html/${env.BRANCH_NAME}"
+                
+                // Recreate branch-specific directory
+                sshPublisher(
+                    publishers: [
+                        sshPublisherDesc(
+                            configName: 'AWS_Apache',
+                            transfers: [
+                                sshTransfer(
+                                    execCommand: """
+                                        sudo rm -rf ${deployPath} && \
+                                        sudo mkdir -p ${deployPath} && \
+                                        sudo chmod 755 ${deployPath}
+                                    """
+                                )
+                            ]
+                        )
+                    ]
+                )
+    
+                // Deploy files to branch directory
+                sshPublisher(
+                    publishers: [
+                        sshPublisherDesc(
+                            configName: 'AWS_Apache',
+                            transfers: [
+                                sshTransfer(
+                                    sourceFiles: '**',
+                                    remoteDirectory: "${deployPath}",
+                                    removePrefix: '',
+                                    execCommand: "sudo chmod -R 644 ${deployPath}/*"
+                                )
+                            ]
+                        )
+                    ]
+                )
             }
         }
     }
