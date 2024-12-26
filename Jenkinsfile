@@ -23,6 +23,7 @@ pipeline {
                                     execCommand: '''
                                         mkdir -p /var/www/html/tourism_website
                                         cp -r /var/www/html/tourism_website
+                                        chmod 644 /var/www/html/tourism_website
                                         sudo systemctl restart apache2
                                     '''
                                 )
