@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_PATH = '/var/www/html/react-app'  // Path on Apache server
-        NODE_HOME = '/usr'  // Adjust if Node.js path differs
+        DEPLOY_PATH = '/var/www/html'
+        BRANCH_NAME = "${env.BRANCH_NAME}" // Use branch-specific subdirectories
     }
 
     stages {
@@ -13,40 +13,42 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                script {
-                    // Change directory to shopping-app before running npm install
-                    dir('shopping-app') {
-                        sh "${NODE_HOME}/bin/npm install"
-                    }
-                }
-            }
-        }
-
-        stage('Build App') {
-            steps {
-                script {
-                    // Change directory to shopping-app before building the app
-                    dir('shopping-app') {
-                        sh "${NODE_HOME}/bin/npm run build"
-                    }
-                }
-            }
-        }
-
         stage('Deploy to Apache') {
             steps {
                 script {
+                    def deployPath = "${DEPLOY_PATH}/${BRANCH_NAME}"
+
+                    // Ensure the branch-specific directory exists
                     sshPublisher(
                         publishers: [
                             sshPublisherDesc(
-                                configName: 'AWS_Apache',  // Preconfigured in Jenkins
+                                configName: 'AWS_Apache',
                                 transfers: [
                                     sshTransfer(
-                                        sourceFiles: 'shopping-app/build/**',
-                                        remoteDirectory: DEPLOY_PATH,
-                                        cleanRemote: true
+                                        execCommand: """
+                                            mkdir -p ${deployPath}
+                                            chmod 755 ${deployPath}
+                                        """
+                                    )
+                                ]
+                            )
+                        ]
+                    )
+
+                    // Transfer the files to the Apache server
+                    sshPublisher(
+                        publishers: [
+                            sshPublisherDesc(
+                                configName: 'AWS_Apache',
+                                transfers: [
+                                    sshTransfer(
+                                        sourceFiles: '**/*',
+                                        removePrefix: '',
+                                        remoteDirectory: "${deployPath}",
+                                        execCommand: """
+                                            chmod -R 644 ${deployPath}
+                                            echo "Deployment successful to ${deployPath}"
+                                        """
                                     )
                                 ]
                             )
@@ -59,7 +61,8 @@ pipeline {
 
     post {
         success {
-            echo "Deployment successful! Access your app at: http://34.227.32.17/"
+            echo "Deployment successful!"
+            echo "Access your site at http://34.227.32.17/${env.BRANCH_NAME}/"
         }
         failure {
             echo "Deployment failed!"
