@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DEPLOY_PATH = '/var/www/html/react-app'  // Path on Apache server
-        NODE_HOME = '/usr/local/bin'  // Adjust if Node.js path differs
+        NODE_HOME = '/usr'  // Adjust if Node.js path differs
     }
 
     stages {
