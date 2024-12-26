@@ -21,10 +21,9 @@ pipeline {
                                 sshTransfer(
                                     sourceFiles: '**/*',
                                     removePrefix: '',
-                                    remoteDirectory: '/var/www/html',
+                                    remoteDirectory: 'tourism_website',
                                     execCommand: '''
-                                        mkdir -p tourism_website
-                                        rsync -avz tourism_website/
+                                        cp -r tourism_website/
                                         sudo systemctl restart apache2
                                     '''
                                 )
