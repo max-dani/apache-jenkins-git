@@ -2,7 +2,11 @@ pipeline {
     agent any
 
     stages {
-        stage('Clone Repository') { steps { git branch: 'main', url: 'https://github.com/max-dani/apache-jenkins-git.git' } }
+        stage('Clone Repository') {
+            steps {
+                git 'https://github.com/max-dani/apache-jenkins-git.git'
+            }
+        }
         stage('Build') {
             steps {
                 // Add any build steps if necessary
@@ -19,8 +23,12 @@ pipeline {
                                 sshTransfer(
                                     sourceFiles: '**/*',
                                     removePrefix: '',
-                                    remoteDirectory: '/var/www/html',
-                                    execCommand: 'sudo systemctl restart apache2'
+                                    remoteDirectory: '/var/www/html/tourism_website',
+                                    execCommand: '''
+                                        mkdir -p /var/www/html/tourism_website
+                                        cp -r /var/www/html/tourism_website
+                                        sudo systemctl restart apache2
+                                    '''
                                 )
                             ]
                         )
