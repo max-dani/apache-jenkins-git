@@ -16,7 +16,10 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    sh "${NODE_HOME}/bin/npm install"
+                    // Change directory to shopping-app before running npm install
+                    dir('shopping-app') {
+                        sh "${NODE_HOME}/bin/npm install"
+                    }
                 }
             }
         }
@@ -24,7 +27,10 @@ pipeline {
         stage('Build App') {
             steps {
                 script {
-                    sh "${NODE_HOME}/bin/npm run build"
+                    // Change directory to shopping-app before building the app
+                    dir('shopping-app') {
+                        sh "${NODE_HOME}/bin/npm run build"
+                    }
                 }
             }
         }
@@ -38,7 +44,7 @@ pipeline {
                                 configName: 'AWS_Apache',  // Preconfigured in Jenkins
                                 transfers: [
                                     sshTransfer(
-                                        sourceFiles: 'build/**',
+                                        sourceFiles: 'shopping-app/build/**',
                                         remoteDirectory: DEPLOY_PATH,
                                         cleanRemote: true
                                     )
