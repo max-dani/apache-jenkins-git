@@ -2,7 +2,9 @@ pipeline {
     agent any
 
     stages {
-                stage('Clone Repository') { steps { git branch: 'main', url: 'https://github.com/max-dani/apache-jenkins-git.git' } }
+        stage('Clone Repository') {
+            steps { 
+                    git branch: 'main', url: 'https://github.com/max-dani/apache-jenkins-git.git' } }
         stage('Build') {
             steps {
                 // Add any build steps if necessary
@@ -22,8 +24,9 @@ pipeline {
                                     remoteDirectory: '/var/www/html/tourism_website',
                                     execCommand: '''
                                         mkdir -p /var/www/html/tourism_website
-                                        cp -r /var/www/html/tourism_website
-                                        chmod 644 /var/www/html/tourism_website
+                                        rsync -avz /var/www/html/tourism_website/ 
+                                        echo "Transferred files:" 
+                                        ls -l /var/www/html/tourism_website
                                         sudo systemctl restart apache2
                                     '''
                                 )
